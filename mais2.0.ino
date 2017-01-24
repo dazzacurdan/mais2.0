@@ -15,6 +15,13 @@
 
 Servo myservo;
 
+struct PIN
+{
+  int rele0;
+  int rele1;
+  int stepper;
+};
+
 int pos = 0; 
 
 const int coinInt = 0; 
@@ -26,17 +33,20 @@ volatile float coinsValue = 0.00;
 int coinsChange = 0;                  
 //A Coin has been inserted flag
 
+PIN pin;
+
 void setup()
 {
+   pin= {7,8,9};
+  
   Serial.begin(9600);                 
   //Start Serial Communication
   attachInterrupt(coinInt, coinInserted, RISING);
   //If coinInt goes HIGH (a Pulse), call the coinInserted function
   //An attachInterrupt will always trigger, even if your using delays
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
+  pinMode(pin.rele0, OUTPUT);
 
-  myservo.attach(9);
+  myservo.attach(pin.stepper);
      
 
 }
@@ -44,6 +54,7 @@ void setup()
 void coinInserted()    
 //The function that is called every time it recieves a pulse
 {
+  Serial.println("Coin insered");
   coinsValue = coinsValue + 0.05;  
 //As we set the Pulse to represent 5p or 5c we add this to the coinsValue
   coinsChange = 1;                           
@@ -57,13 +68,14 @@ void loop()
     coinsChange = 0;  
     Serial.print("Credit: £");
     Serial.println(coinsValue);
-    for(pos = 20; pos < 90; ++pos)
+    for(pos = 0; pos < 90; ++pos)
     {
       myservo.write(pos);
       delay(15);
     }
-    digitalWrite(7, LOW);  
-    delay(10000);  
-    digitalWrite(7, HIGH);  
+    digitalWrite(pin.rele0, LOW);  
+    delay(5000);  
+    digitalWrite(pin.rele0, HIGH);
+    Serial.println("FINISH");
   }
 }
