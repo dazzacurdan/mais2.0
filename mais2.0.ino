@@ -15,69 +15,77 @@
 
 Servo myservo;
 
+struct TIME
+{
+  int servo;
+  int cottura;
+};
+
 struct PIN
 {
   int rele0;
   int rele1;
   int stepper;
+  byte interrupt0;
+  byte interrupt1;
 };
 
-int pos = 0; 
+struct COIN
+{
+  volatile float value;
+  volatile bool isChanged;
+};
 
-//const int coinInt = 0;
-const byte interruptPin = 2; 
-//Attach coinInt to Interrupt Pin 0 (Digital Pin 2). Pin 3 = Interrpt Pin 1.
-
-volatile float coinsValue = 0.00;
-//Set the coinsValue to a Volatile float
-//Volatile as this variable changes any time the Interrupt is triggered
-int coinsChange = 0;                  
-//A Coin has been inserted flag
-
+TIME time_t;                   
 PIN pin;
+COIN coin;
 
 void setup()
 {
-   pin= {7,8,9};
+  time_t = {40,5000};
+  pin = {7,8,9,3,2};
+  coin = {0.00, false};
   
   Serial.begin(9600);                 
-  //Start Serial Communication
-  pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), coinInserted, RISING);
-  //If coinInt goes HIGH (a Pulse), call the coinInserted function
-  //An attachInterrupt will always trigger, even if your using delays
+  
+  pinMode(pin.interrupt0, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(pin.interrupt0), coinInserted, CHANGE);//RISING);
+
+  pinMode(pin.interrupt1, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(pin.interrupt1), coinInserted, CHANGE);
+  
   pinMode(pin.rele0, OUTPUT);
-
+  digitalWrite(pin.rele0, HIGH);
+  
   myservo.attach(pin.stepper);
-     
-
 }
 
 void coinInserted()    
 //The function that is called every time it recieves a pulse
 {
-  Serial.println("Coin insered");
-  coinsValue = coinsValue + 0.05;  
+  //Serial.println("Coin insered");
+  coin.value = coin.value + 0.05;  
 //As we set the Pulse to represent 5p or 5c we add this to the coinsValue
-  coinsChange = 1;                           
+  coin.isChanged = true;                           
 //Flag that there has been a coin inserted
 }
 
 void loop()
 {
-  if(coinsChange == 1)//Check if a coin has been Inserted
+  if(coin.isChanged)//Check if a coin has been Inserted
   {
-    coinsChange = 0;  
-    Serial.print("Credit: £");
-    Serial.println(coinsValue);
-    for(pos = 0; pos < 90; ++pos)
+    coin.isChanged = false;  
+    //Serial.print("Credit: £");
+    //Serial.println(coinsValue);
+    for(int pos = 0; pos < 90; ++pos)
     {
       myservo.write(pos);
-      delay(15);
+      delay(time_t.servo);
     }
+    
     digitalWrite(pin.rele0, LOW);  
-    delay(5000);  
+    delay(time_t.cottura);  
     digitalWrite(pin.rele0, HIGH);
-    Serial.println("FINISH");
+    //Serial.println("FINISH");
   }
 }
