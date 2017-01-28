@@ -24,7 +24,8 @@ struct PIN
 
 int pos = 0; 
 
-const int coinInt = 0; 
+//const int coinInt = 0;
+const byte interruptPin = 2; 
 //Attach coinInt to Interrupt Pin 0 (Digital Pin 2). Pin 3 = Interrpt Pin 1.
 
 volatile float coinsValue = 0.00;
@@ -41,7 +42,8 @@ void setup()
   
   Serial.begin(9600);                 
   //Start Serial Communication
-  attachInterrupt(coinInt, coinInserted, RISING);
+  pinMode(interruptPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), coinInserted, RISING);
   //If coinInt goes HIGH (a Pulse), call the coinInserted function
   //An attachInterrupt will always trigger, even if your using delays
   pinMode(pin.rele0, OUTPUT);
