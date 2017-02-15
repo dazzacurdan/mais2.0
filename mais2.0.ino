@@ -43,40 +43,48 @@ COIN coin;
 void setup()
 {
   time_t = {40,5000};
-  pin = {7,8,9,3,2};
+  pin = {7,8,9,2,3};
   coin = {0.00, false};
   
   Serial.begin(9600);                 
   
   pinMode(pin.interrupt0, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(pin.interrupt0), coinInserted, CHANGE);//RISING);
+  attachInterrupt(digitalPinToInterrupt(pin.interrupt0), coinInserted, RISING);//RISING);
 
   pinMode(pin.interrupt1, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(pin.interrupt1), coinInserted, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(pin.interrupt1), interrupt1, CHANGE);
   
   pinMode(pin.rele0, OUTPUT);
   digitalWrite(pin.rele0, HIGH);
   
   myservo.attach(pin.stepper);
 }
-
+void interrupt1()
+{
+  Serial.println("interrupt1");
+}
 void coinInserted()    
 //The function that is called every time it recieves a pulse
 {
-  //Serial.println("Coin insered");
-  coin.value = coin.value + 0.05;  
-//As we set the Pulse to represent 5p or 5c we add this to the coinsValue
-  coin.isChanged = true;                           
-//Flag that there has been a coin inserted
+  Serial.print("BEFORE isChanged: ");
+  Serial.println(coin.isChanged);
+  if(!coin.isChanged)
+  {
+    coin.value = coin.value + 0.05;  
+    //As we set the Pulse to represent 5p or 5c we add this to the coinsValue
+    coin.isChanged = true;                           
+    //Flag that there has been a coin inserted
+  }
+  Serial.print("AFTER isChanged: ");
+  Serial.println(coin.isChanged);
 }
 
 void loop()
 {
   if(coin.isChanged)//Check if a coin has been Inserted
-  {
-    coin.isChanged = false;  
-    //Serial.print("Credit: £");
-    //Serial.println(coinsValue);
+  {  
+    Serial.print("Credit: £");
+    Serial.println(coin.value);
     for(int pos = 0; pos < 90; ++pos)
     {
       myservo.write(pos);
@@ -86,6 +94,10 @@ void loop()
     digitalWrite(pin.rele0, LOW);  
     delay(time_t.cottura);  
     digitalWrite(pin.rele0, HIGH);
-    //Serial.println("FINISH");
+    delay(10);
+    Serial.println("FINISH");
+    coin.isChanged = false;
+    Serial.print("isChanged: ");
+    Serial.println(coin.isChanged);
   }
 }
